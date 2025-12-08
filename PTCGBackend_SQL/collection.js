@@ -36,4 +36,32 @@ router.post("/", async (req, res) => {
     }
 });
 
+//計算卡包有幾張牌
+router.get("/count", async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+
+        const sql = `
+            SELECT 
+                c.collections_id AS collection_id,
+                c.code AS collection_code,
+                c.name_ch AS collection_name,
+                c.release_date,
+                COUNT(cards.card_id) AS card_count
+            FROM ptcg_collections c
+            LEFT JOIN ptcg_pokemon_cards cards ON c.collections_id = cards.collection_id
+            GROUP BY c.collections_id, c.code, c.name_ch, c.release_date
+            ORDER BY c.collections_id
+        `;
+
+        const [rows] = await conn.query(sql);
+        conn.release();
+
+        res.json(rows); // 回傳 JSON 給前端
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "資料庫錯誤" });
+    }
+});
+
 export default router;
