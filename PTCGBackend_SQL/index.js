@@ -15,8 +15,8 @@ app.use(cors());
 const pool = mysql.createPool({
     host: "localhost",
     user: "root",
-    password: "root",
-    database: "ptcg_db", 
+    password: "0820",
+    database: "ptcg_db",
     connectionLimit: 10,
     dateStrings: true
 });
@@ -89,6 +89,7 @@ app.post("/auth/login", async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ error: "密碼錯誤" });
 
+    // 產生 JWT
     const token = jwt.sign(
         {
             user_id: user.user_id,
@@ -99,9 +100,13 @@ app.post("/auth/login", async (req, res) => {
         { expiresIn: "7d" }
     );
 
-    res.json({ message: "登入成功", token });
+    // 回傳 token + username
+    res.json({
+        message: "登入成功",
+        token,
+        username: user.username // 加上 username
+    });
 });
-
 
 //查詢屬性、稀有度、特殊卡、系列、關鍵字
 
@@ -173,6 +178,49 @@ app.get("/refs", async (req, res) => {
 
     res.json({ energy, rarity, specal, collections });
 });
+//下拉式collection
+app.get("/refs/collection", async (req,res) => {
+    const conn = await pool.getConnection();
+    const [collectionsType] = await conn.query("SELECT * FROM collection_type");
+
+    conn.release();
+
+    res.json({ collectionsType });
+});
+
+app.post("/collections", async (req, res) => {
+    try {
+        const { year, keyword, collection_type } = req.body; // 從 body 拿資料
+        const conn = await pool.getConnection();
+
+        let sql = "SELECT * FROM ptcg_collections WHERE 1";
+        const params = [];
+
+        if (year) {
+            sql += " AND YEAR(release_date) = ?";
+            params.push(year);
+        }
+
+        if (keyword) {
+            sql += " AND (name_ch LIKE ? OR code LIKE ?)";
+            params.push(`%${keyword}%`, `%${keyword}%`);
+        }
+
+        if (collection_type && collection_type != "4") { // 4 = 全部
+            sql += " AND collection_type = ?";
+            params.push(collection_type);
+        }
+
+        const [rows] = await conn.query(sql, params);
+        conn.release();
+
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "資料庫錯誤" });
+    }
+});
+
 
 // 建立卡組
 
