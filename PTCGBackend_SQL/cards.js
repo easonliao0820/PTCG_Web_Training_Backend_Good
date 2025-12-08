@@ -52,9 +52,25 @@ router.get("/:id", async (req, res) => {
         const conn = await pool.getConnection();
 
         const sql = `
-            SELECT *
-            FROM ptcg_pokemon_cards
-            WHERE card_id = ?
+            SELECT 
+                c.card_id,
+                c.name,
+                c.hp,
+                c.stage,
+                c.image_url,
+                c.info,
+                co.name_ch AS name_ch,
+                c.specal_card_type,
+                r.rarity_en AS rarity_en,
+                e.energy_ch AS energy_type_ch
+            FROM ptcg_pokemon_cards c
+            LEFT JOIN energy_attributes e 
+                ON c.energy_type = e.energy_id
+            LEFT JOIN rarity r
+                ON c.rarity_id = r.rarity_id
+            LEFT JOIN ptcg_collections co
+                ON c.collection_id = co.collections_id
+            WHERE c.card_id = ?
         `;
 
         const [rows] = await conn.query(sql, [id]);
