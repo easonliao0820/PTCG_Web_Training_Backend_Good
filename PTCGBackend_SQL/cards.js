@@ -4,22 +4,29 @@ import { pool } from "./db.js";
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-    const { energy, rarity, specal, collection, q, order } = req.query;
+    const { energy, rarity, specal, collection, stage, card_id, hp, q, order } = req.query;
 
     const where = [];
     const params = [];
 
-    if (energy) { where.push("p.energy_type = ?"); params.push(energy); }
-    if (rarity) { where.push("p.rarity_id = ?"); params.push(rarity); }
-    if (specal) { where.push("p.specal_card_type = ?"); params.push(specal); }
-    if (collection) { where.push("p.collection_id = ?"); params.push(collection); }
-    if (q) { where.push("p.name LIKE ?"); params.push(`%${q}%`); }
+    if (energy)      { where.push("p.energy_type = ?"); params.push(energy); }
+    if (rarity)      { where.push("p.rarity_id = ?"); params.push(rarity); }
+    if (specal)      { where.push("p.specal_card_type = ?"); params.push(specal); }
+    if (collection)  { where.push("p.collection_id = ?"); params.push(collection); }
+    if (stage)       { where.push("p.stage = ?"); params.push(stage); }
+    if (card_id)     { where.push("p.card_id = ?"); params.push(card_id); }
+    if (hp)          { where.push("p.hp = ?"); params.push(hp); }
+    if (q)           { where.push("p.name LIKE ?"); params.push(`%${q}%`); }
 
     const whereSQL = where.length ? `WHERE ${where.join(" AND ")}` : "";
     const orderSQL = order ? `ORDER BY p.card_id ${order}` : "";
 
     const sql = `
-        SELECT p.*, e.energy_ch, r.rarity_ch, s.speca_type_ch, c.name_ch AS collection_ch
+        SELECT p.*, 
+               e.energy_ch, 
+               r.rarity_ch, 
+               s.speca_type_ch, 
+               c.name_ch AS collection_ch
         FROM ptcg_pokemon_cards p
         JOIN energy_attributes e ON p.energy_type = e.energy_id
         JOIN rarity r ON p.rarity_id = r.rarity_id
