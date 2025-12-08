@@ -43,4 +43,30 @@ router.get("/", async (req, res) => {
     res.json(rows);
 });
 
+router.get("/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const conn = await pool.getConnection();
+
+        const sql = `
+            SELECT *
+            FROM ptcg_pokemon_cards
+            WHERE card_id = ?
+        `;
+
+        const [rows] = await conn.query(sql, [id]);
+        conn.release();
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "找不到該卡牌" });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "資料庫錯誤" });
+    }
+});
+
+
 export default router;
