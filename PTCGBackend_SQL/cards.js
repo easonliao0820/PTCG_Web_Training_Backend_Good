@@ -4,7 +4,7 @@ import { pool } from "./db.js";
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-    const { energy, rarity, specal, collection, stage, card_id, hp, q, order } = req.query;
+    const { energy, rarity, specal, collection, stage, hp, q, order } = req.query;
 
     const where = [];
     const params = [];
@@ -14,9 +14,12 @@ router.get("/", async (req, res) => {
     if (specal)      { where.push("p.specal_card_type = ?"); params.push(specal); }
     if (collection)  { where.push("p.collection_id = ?"); params.push(collection); }
     if (stage)       { where.push("p.stage = ?"); params.push(stage); }
-    if (card_id)     { where.push("p.card_id = ?"); params.push(card_id); }
     if (hp)          { where.push("p.hp = ?"); params.push(hp); }
-    if (q)           { where.push("p.name LIKE ?"); params.push(`%${q}%`); }
+
+    if (q) {
+        where.push("(p.name LIKE ? OR p.card_id LIKE ?)");
+        params.push(`%${q}%`, `%${q}%`);
+    }
 
     const whereSQL = where.length ? `WHERE ${where.join(" AND ")}` : "";
     const orderSQL = order ? `ORDER BY p.card_id ${order}` : "";
