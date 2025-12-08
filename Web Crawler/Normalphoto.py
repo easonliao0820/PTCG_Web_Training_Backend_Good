@@ -11,7 +11,7 @@ os.makedirs(output_folder, exist_ok=True)
 headers = {"User-Agent": "Mozilla/5.0"}
 
 max_pages = 10
-expansion_code = "M2a"
+expansion_code = "M2"
 counter = 1
 
 for page in range(1, max_pages + 1):
@@ -35,7 +35,7 @@ for page in range(1, max_pages + 1):
         img_url = img.get('data-original') or img.get('src')
         if img_url:
             img_url = urljoin(base_url, img_url)
-            filename = f"{expansion_code} {counter:03d}.jpg"
+            filename = f"{expansion_code} {counter:03d}.png"
             filepath = os.path.join(output_folder, filename)
 
             try:

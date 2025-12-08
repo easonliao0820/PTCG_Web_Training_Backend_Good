@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-import openpyxl
+import json
+import os
 import re
 
 BASE_URL = "https://asia.pokemon-card.com"
@@ -35,6 +36,52 @@ def extract_number(num_tag):
     match = re.match(r"(\d+)", txt)
     return match.group(1).zfill(3) if match else ""
 
+# ---- 抓出血量 ----
+def extract_hp(hp_tag):
+    if hp_tag is None:
+        return ""
+    
+    txt = hp_tag.text.strip()
+    return txt
+
+# ---- 抓出階段 ----
+def extract_stage(stage_tag):
+    if stage_tag is None:
+        return ""
+    
+    txt = stage_tag.text.strip()
+    return txt
+
+# ---- 抓出卡牌描述 ----
+def extract_info(info_tag):
+    if info_tag is None:
+        return ""
+    
+    txt = info_tag.text.strip()
+    return txt
+
+# ---- 從屬性圖示URL取出能量屬性 ----
+def extract_energy(energy_tag):
+    if energy_tag is None:
+        return ""
+
+    src = energy_tag.get("src", "")
+    filename = src.split("/")[-1]  
+
+    energy_name = filename.split(".")[0]  
+
+    return energy_name
+
+# ---- 抓卡圖的url ----
+def get_local_image_url(expansion, number):
+    folder = "pokemon_images"
+    filename = f"{expansion} {number}.jpg"
+    path = os.path.join(folder, filename)
+
+    if os.path.exists(path):
+        return path.replace("\\", "/")
+
+    return ""
 
 # 抓列表頁所有卡 ID
 def get_card_ids(list_url):
@@ -52,36 +99,51 @@ def get_card_ids(list_url):
 
 
 # 抓詳細頁資料
-def get_card_detail(card_id):
+def get_card_detail(card_id, expansion):
     url = f"{BASE_URL}/tw/card-search/detail/{card_id}/"
     res = requests.get(url)
     soup = BeautifulSoup(res.text, "html.parser")
 
     h1_tag = soup.select_one("h1.pageHeader.cardDetail")
     number_tag = soup.select_one("span.collectorNumber")
+    hp_tag = soup.select_one("span.number")
+    energy_tag = soup.select_one("p.mainInfomation img")
+    stage_tag = soup.select_one("span.evolveMarker")
+    info_tag = soup.select_one("p.discription")
 
     name = extract_card_name(h1_tag)
     number = extract_number(number_tag)
+    hp = extract_hp(hp_tag)
+    energy = extract_energy(energy_tag)
+    stage = extract_stage(stage_tag)
+    info = extract_info(info_tag)
+    image_url = get_local_image_url(expansion, number)
 
-    return name, number
+    return {
+        "card_id": f"{expansion}_{number}",
+        "name": name,
+        "hp": hp,
+        "stage": stage,
+        "image_url": f"/assets/cards/{expansion} {number}.png",
+        "info": info,
+        "energy_en": energy,
+        "collection_code": expansion,
+        "specal_card_type": "",
+        "rarity_id": ""
+    }
 
 
-# 匯出 excel
-def save_to_excel(cards, filename="cards.xlsx"):
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.append(["Name", "Number"])
+#儲存成 JSON
+def save_to_json(cards, filename="cards.json"):
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(cards, f, ensure_ascii=False, indent=4)
 
-    for name, number in cards:
-        ws.append([name, number])
-
-    wb.save(filename)
-    print(f"✔ 已匯出：{filename}")
+    print(f"已輸出JSON檔：{filename}")
 
 
 # ------------------ 主程式 ---------------------
 if __name__ == "__main__":
-    expansion = "M2a"
+    expansion = "M2"
     page = 1
     cards = []
 
@@ -95,10 +157,23 @@ if __name__ == "__main__":
             break
 
         for cid in ids:
-            name, number = get_card_detail(cid)
-            print(expansion + " " + number, name)
-            cards.append([name, expansion + " " + number])
+            detail = get_card_detail(cid, expansion)
+
+            print(
+                detail["card_id"], 
+                detail["name"], 
+                detail["hp"], 
+                detail["stage"],
+                detail["image_url"],
+                detail["info"], 
+                detail["energy_en"],
+                detail["collection_code"],
+                detail["specal_card_type"],
+                detail["rarity_id"]
+            )
+
+            cards.append(detail)
 
         page += 1
 
-    save_to_excel(cards)
+    save_to_json(cards)
