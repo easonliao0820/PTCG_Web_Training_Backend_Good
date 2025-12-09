@@ -13,21 +13,43 @@ router.post("/", auth, async (req, res) => {
     const time = moment().tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss");
 
     const conn = await pool.getConnection();
-    await conn.query(
-        "INSERT INTO ptcg_deck (deck_name, user_id, number, created_at) VALUES (?, ?, ?, ?)",
-        [deck_name, user_id, 0, time]
-    );
-    conn.release();
 
-    res.json({ message: "卡組已建立", created_at: time });
+    try {
+        const [result] = await conn.query(
+            "INSERT INTO ptcg_deck (deck_name, user_id, number, created_at) VALUES (?, ?, ?, ?)",
+            [deck_name, user_id, 0, time]
+        );
+
+        // result.insertId 就是 MySQL 自增的 deck_id
+        const deck_id = result.insertId;
+
+        res.json({ message: "卡組已建立", deck_id, created_at: time });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "建立卡組失敗" });
+    } finally {
+        conn.release();
+    }
 });
+
 
 // 查詢使用者所有卡組
 router.get("/", auth, async (req, res) => {
     const conn = await pool.getConnection();
+    const user_id = req.user.user_id;
     const [rows] = await conn.query(
-        "SELECT * FROM ptcg_deck WHERE user_id = ?",
-        [req.user.user_id]
+        `
+            SELECT 
+                deck_id,
+                deck_name,
+                user_id,
+                number,
+                DATE_FORMAT(created_at, '%Y/%m/%d') AS created_at
+            FROM ptcg_deck
+            WHERE user_id = ?
+        `,
+        [user_id]
     );
     conn.release();
     res.json(rows);
