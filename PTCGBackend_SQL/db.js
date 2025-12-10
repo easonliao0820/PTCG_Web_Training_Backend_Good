@@ -4,7 +4,7 @@ import mysql from "mysql2/promise";
 export const pool = mysql.createPool({
     host: "localhost",
     user: "root",
-    password: "0820",
+    password: "",
     database: "ptcg_db",
     connectionLimit: 10,
     dateStrings: true
