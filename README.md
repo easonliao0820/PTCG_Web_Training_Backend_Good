@@ -23,7 +23,7 @@
 
 ● 卡牌資料管理：查詢全部卡牌、多條件查詢、所有卡牌資料皆以 MySQL 儲存
 
-● MySQL 卡組系統：新增卡組、編輯卡組、刪除卡組、依使用者查詢所有卡組、卡組建立時間 created_at（自動產生）、JWT 驗證使用者權限
+● MySQL 卡組系統：新增卡組、編輯卡組、刪除卡組、依使用者查詢所有卡組、卡組建立時間 created_at（自動產生）、JWT 驗證使用者權
 
 ● MongoDB 卡組系統：新增卡組、更新卡組（名稱、卡牌陣列）、刪除卡組、自動維護 created_at / updated_at
 
@@ -65,5 +65,48 @@ deck_name
 cards Snapshot 陣列
 created_at / updated_at
 #
-## 安裝教學
-### 下載專案
+## 建置後端
+### 1.下載專案
+git clone https://github.com/easonliao0820/PTCG_Web_Training_Backend_Good.git
+cd PTCG_Web_Training_Backend_Good
+
+### 2.下載專案
+安裝後端依賴
+
+### 3.匯入MySQL Schema
+https://github.com/easonliao0820/PTCG_Web_Training_Backend_Good/blob/main/sql/schema.sql
+
+### 4.MongoDB建置
+使用MongoDB Compass建立：
+
+Database: ptcg_deckbuilder
+Collection: ptcg_decks
+
+### 5.啟動NoSQL後端
+開啟一個Terminal
+cd PTCGBackend_NoSQL
+node server.js
+
+### 6.修改連進MySQL的密碼
+打開PTCGBackend_SQL，進入dp.js
+將password改成改成自己設定的密碼
+
+### 7.啟動SQL後端
+開啟另一個Terminal
+cd PTCGBackend_SQL
+node node.js
+#
+## 專案結構
+<div style="border: 2px solid #444; padding: 12px; border-radius: 8px;">
+<pre>
+PTCG_Web_Training_Backend_Good
+│
+├─ PTCGBackend_SQL/                # 放有SQL組料庫API的模組
+├─ PTCGBackend_NoSQL/              # MongoDB + Node.js 後端 API
+├─ Web Crawler/                    # 放有Python卡圖與卡牌資料的爬蟲
+├─ DB/                             # 放有僅放有schema
+├─ sql/                            # 放有schema和sample_queries
+├─ nosql/                          # 放有mongo_queries
+├─ README.md                       # 本說明文件
+</pre>
+</div>
