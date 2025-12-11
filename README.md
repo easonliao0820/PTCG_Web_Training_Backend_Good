@@ -45,13 +45,13 @@
 ### 資料庫
 MySQL
 
-● user
-● ptcg_pokemon_cards
-● energy_attributes
-● rarity
-● specal_card_type
-● ptcg_collections
-● ptcg_deck
+- user
+* ptcg_pokemon_cards
+* energy_attributes
+* rarity
+* specal_card_type
+* ptcg_collections
++ ptcg_deck
 
 MongoDB
 
